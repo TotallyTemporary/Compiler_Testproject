@@ -7,19 +7,19 @@ class Tokenizer (private val input: String):
   private var index = 0
 
   private def currentChar = {
-    if (index >= input.length) input.charAt(input.length)
+    if (index >= input.length) input.charAt(input.length-1) // if we've stepped beyond the input we get the last character.
     else input.charAt(index)
   }
 
   private def previousChar = {
-    if (index == 0) input.charAt(0)
+    if (index == 0) currentChar
     else input.charAt(index-1)
   }
 
   // Possible bug? If the last character is for example "=", then we will see there be a DoubleEquals,
   // since the nextChar is duplicated. Probably not important since it's a parsing error nonetheless.
   private def nextChar = {
-    if (index >= input.length-1) input.charAt(input.length)
+    if (index >= input.length-1) currentChar
     else input.charAt(index+1)
   }
 
@@ -27,16 +27,20 @@ class Tokenizer (private val input: String):
   def next(): Token = {
     // these methods must recursively call next so we don't run them in the wrong order.
     if (index >= input.length) return Token(TokenType.END_OF_FILE, null)
-    if (currentChar.isWhitespace) { skipWhitespace(); return next() }
-    if (skipMultilineComments()) return next()
 
-    if (currentChar.isDigit) return getIntegerLiteral()
+    if (currentChar.isWhitespace)              { skipWhitespace(); return next() }
+    if (currentChar == '/' && nextChar == '/') { skipComment(); return next() }
+    if (currentChar == '/' && nextChar == '*') { skipMultilineComments(); return next() }
 
+    if (currentChar.isDigit) return getIntegerLiteral() // get integer literals
+
+    // get two- and one-character tokens
     var token: Token = twoCharacterTokens()
     if (token != null) return token
-
     token = oneCharacterTokens()
     if (token != null) return token
+
+    if (currentChar.isLetter) return identifiers() // get identifiers
 
     println("The tokenizer failed to find any tokens!")
     null
@@ -56,20 +60,51 @@ class Tokenizer (private val input: String):
     while (currentChar.isWhitespace && advance()) {}
   }
 
-  /** if there is a comment start at the current index, we skip until the end of it. Returns true if a comment was skipped. */
-  private def skipMultilineComments(): Boolean = {
-    if (input.length <= index+1) return false
+  /** A single-line comment. Keeps advancing until reaching a newline or end-of-file. */
+  private def skipComment(): Unit = {
+    if (currentChar != '/' || nextChar != '/') return
 
-    if (currentChar=='/' && input.charAt(index+1) == '*') {
-      advance()
-      advance()
+    advance()
+    advance()
 
-      while (advance() && !(input.charAt(index-1) == '*' && currentChar == '/')) {}
-      return true
-    }
-    false
+    while (currentChar != '\n' && advance()) {}
   }
 
+  /** if there is a comment start at the current index, we skip until the end of it. */
+  private def skipMultilineComments(): Unit = {
+    if (currentChar != '/' || nextChar != '*') return
+
+    advance()
+    advance()
+
+    while (advance() && !(previousChar == '*' && currentChar == '/')) {}
+  }
+
+  /** This function will return either an identifier or a keyword token.
+   * It should only be called on alphabet characters.
+   *
+   * Note that keywords are case-insensitive whereas identifiers are not.
+   * */
+  private def identifiers(): Token = {
+    val keywords = HashMap(
+      "var"->TokenType.VAR, "if"->TokenType.IF, "while"->TokenType.WHILE, "return"->TokenType.RETURN
+    )
+
+    val start = index
+    while (Character.isAlphabetic(currentChar) && advance()) {}
+    val name: String = input.substring(start, index)
+
+    val tType = keywords.get(name.toLowerCase)
+    if (tType.isEmpty) {
+      // identifier
+      new Token(TokenType.IDENT, name)
+    } else {
+      // keyword
+      new Token(tType.get, name.toLowerCase)
+    }
+  }
+
+  /** This function returns a token if one was found at the current and next index. Returns null otherwise. Only works for 2-character tokens. */
   private def twoCharacterTokens(): Token = {
     val tokens = HashMap(
       "=="->TokenType.DOUBLE_EQUALS, "!="->TokenType.NOT_EQUALS
