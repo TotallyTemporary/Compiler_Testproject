@@ -1,0 +1,16 @@
+PLAN:
+C-like structure, curly brace syntax
+only integers because types are pain
+possibly optimizations
+
+end goal: have the program write asm code to be compiled with nasm on linux
+
+source code ==tokenizer==> token stream
+token stream ==parser==> abstract syntax tree
+abstract syntax tree ==transformation(?)==> intermediate three-address code
+three-address code ==substitution==> assembly code
+assembly code ==nasm==> executable file
+
+first try to get nasm working
+then try to get tree-address code substituted into assembly code (working backwards)
+after this working forwards is going to be easier so we do source code tokenizing, parsing and transformation.
