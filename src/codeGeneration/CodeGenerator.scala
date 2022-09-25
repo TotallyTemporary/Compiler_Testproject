@@ -1,4 +1,4 @@
-package substitution
+package codeGeneration
 
 import java.util.UUID
 import scala.collection.mutable
