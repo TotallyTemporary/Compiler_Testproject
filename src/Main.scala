@@ -1,9 +1,12 @@
 package src
 
-import codeGeneration.CodeGenerator;
+import codeGeneration.*
+import tokenizer.*
 
 object Main extends App {
-  val cdg = CodeGenerator()
-  cdg.addString("Hello testing World!")
-  println(cdg.generateASM())
+  val tokenizer = new Tokenizer("2+2 /*") // returns 2 + 2 eof
+  println(tokenizer.next())
+  println(tokenizer.next())
+  println(tokenizer.next())
+  println(tokenizer.next())
 }
