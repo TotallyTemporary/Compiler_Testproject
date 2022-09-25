@@ -5,9 +5,23 @@ import scala.collection.mutable
 
 class Tokenizer (private val input: String):
   private var index = 0
-  private def currentChar =
+
+  private def currentChar = {
     if (index >= input.length) input.charAt(input.length)
     else input.charAt(index)
+  }
+
+  private def previousChar = {
+    if (index == 0) input.charAt(0)
+    else input.charAt(index-1)
+  }
+
+  // Possible bug? If the last character is for example "=", then we will see there be a DoubleEquals,
+  // since the nextChar is duplicated. Probably not important since it's a parsing error nonetheless.
+  private def nextChar = {
+    if (index >= input.length-1) input.charAt(input.length)
+    else input.charAt(index+1)
+  }
 
   /** Gets the next token parsed from the input string. */
   def next(): Token = {
@@ -18,9 +32,11 @@ class Tokenizer (private val input: String):
 
     if (currentChar.isDigit) return getIntegerLiteral()
 
-    var token: Token = getSimpleTokens() // this variable will be reused
+    var token: Token = twoCharacterTokens()
     if (token != null) return token
 
+    token = oneCharacterTokens()
+    if (token != null) return token
 
     println("The tokenizer failed to find any tokens!")
     null
@@ -54,13 +70,26 @@ class Tokenizer (private val input: String):
     false
   }
 
-  /** This function returns a "simple token" if one was found at the current index. Returns null otherwise.
-   * A "simple token" is a token that is defined by an unique character.
+  private def twoCharacterTokens(): Token = {
+    val tokens = HashMap(
+      "=="->TokenType.DOUBLE_EQUALS, "!="->TokenType.NOT_EQUALS
+    )
+    val strCurr = ""+currentChar+nextChar
+    val tType = tokens.get(strCurr)
+    if (tType.isEmpty) return null
+
+    advance()
+    advance()
+    new Token(tType.get, strCurr)
+  }
+
+  /** This function returns a token if one was found at the current index. Returns null otherwise.
    * */
-  private def getSimpleTokens(): Token = {
+  private def oneCharacterTokens(): Token = {
     val tokens = HashMap(
         '+'->TokenType.PLUS, '-'->TokenType.MINUS, '*'->TokenType.MUL, '/'->TokenType.DIV,
         '&'->TokenType.AND, '|'->TokenType.OR,
+      '!'->TokenType.NOT, '='->TokenType.EQUALS,
         '('->TokenType.LPAREN, ')'->TokenType.RPAREN,
         '['->TokenType.LBRACKET, ']'->TokenType.RBRACKET,
         '{'->TokenType.LBRACE, '}'->TokenType.RBRACE,
