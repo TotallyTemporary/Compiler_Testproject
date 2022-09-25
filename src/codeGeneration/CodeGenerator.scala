@@ -23,13 +23,6 @@ syscalls, look up number here: https://chromium.googlesource.com/chromiumos/docs
 rax for call number
 args: rdi, rsi, rdx (more not needed for 3-address code)
 */
-object Main extends App {
-  val cdg = CodeGenerator()
-  cdg.addString("Hello testing World!")
-  println(cdg.generateASM())
-}
-
-
 class CodeGenerator:
   // strings stuff
   private def generateStringID = "str_" + UUID.randomUUID.toString.replaceAll("-", "")
