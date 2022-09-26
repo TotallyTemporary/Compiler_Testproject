@@ -3,7 +3,7 @@ package src.tokenizer
 import scala.collection.immutable.HashMap
 import scala.collection.mutable
 
-class Tokenizer (private val input: String):
+class Tokenizer (private val input: String) extends Iterator[Token]:
   private var index = 0
 
   private def currentChar = {
@@ -23,14 +23,17 @@ class Tokenizer (private val input: String):
     else input.charAt(index+1)
   }
 
+  /** hasNext is false if we've reached the end of the input and true otherwise. It's required for the iterator extension. */
+  def hasNext = (this.index < this.input.length)
+
   /** Gets the next token parsed from the input string. */
-  def next(): Token = {
+  def next: Token = {
     // these methods must recursively call next so we don't run them in the wrong order.
     if (index >= input.length) return Token(TokenType.END_OF_FILE, null)
 
-    if (currentChar.isWhitespace)              { skipWhitespace(); return next() }
-    if (currentChar == '/' && nextChar == '/') { skipComment(); return next() }
-    if (currentChar == '/' && nextChar == '*') { skipMultilineComments(); return next() }
+    if (currentChar.isWhitespace)              { skipWhitespace(); return next }
+    if (currentChar == '/' && nextChar == '/') { skipComment(); return next }
+    if (currentChar == '/' && nextChar == '*') { skipMultilineComments(); return next }
 
     if (currentChar.isDigit) return getIntegerLiteral() // get integer literals
 
