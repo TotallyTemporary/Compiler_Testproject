@@ -10,6 +10,5 @@ object Main extends App {
   val tokens: Tokenizer = new Tokenizer("\"something\"==\"something else\"")
   val rootNode: Node = new Parser(tokens).parse()
 
-  println(rootNode.getClass)
-  DebugVisitor.visit(rootNode.asInstanceOf[EqualsNode], 0)
+  DebugVisitor.visit(rootNode, 0)
 }

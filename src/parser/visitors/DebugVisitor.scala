@@ -5,7 +5,7 @@ import parser.visitors.ReturnArgVisitor
 
 // A visit needs to return nothing. The second parameter holds the indentation level for cleaner debugging.
 object DebugVisitor extends ReturnArgVisitor[Unit, Integer] {
-  def visit(n: Node, arg: Integer): Unit = debug(s"Unknown node: $n", arg)
+  def visit(n: Node, arg: Integer): Unit = n.accept(this, arg) // redirect unknown type
 
   def visit(a: AssignNode, arg: Integer): Unit =
     debug("assign: ", arg)
