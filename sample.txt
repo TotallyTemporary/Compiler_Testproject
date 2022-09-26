@@ -33,7 +33,6 @@ term: factor ([MUL | DIV] factor)*
 
 factor: ([PLUS | MINUS | MUL | AND] factor) | # despite being named MUL and AND, these are the *x and &x unary reference and dereference ops.
 (LPAREN expr RPAREN) | INTEGER_LITERAL | STRING_LITERAL | INDENT
-                     | unaryop_expr
 
 funccall_expr: INDENT LPAREN expr* RPAREN
 

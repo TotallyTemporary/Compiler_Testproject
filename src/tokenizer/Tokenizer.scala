@@ -1,4 +1,6 @@
-package src.tokenizer
+package tokenizer
+
+import tokenizer.Token
 
 import scala.collection.immutable.HashMap
 import scala.collection.mutable

@@ -1,4 +1,4 @@
-package src.tokenizer
+package tokenizer
 
 enum TokenType:
   case IDENT // variable names, function names...
