@@ -45,6 +45,8 @@ object DebugVisitor extends ReturnArgVisitor[Unit, Integer] {
   def visit(v: VarLiteral, arg: Integer): Unit =
     debug(s"var literal: ${v.name}", arg)
 
+  def visit(s: StringLiteralNode, arg: Integer): Unit =
+    debug(s"string literal: ${s.value}", arg)
 
   def debug(str: String, indent: Integer) = println(" "*indent+str)
 }

@@ -17,5 +17,6 @@ trait ReturnArgVisitor[R, A]:
   def visit(p: PlusNode, arg: A): R
   def visit(r: RefNode, arg: A): R
   def visit(v: VarLiteral, arg: A): R
+  def visit(s: StringLiteralNode, arg: A): R
 
 end ReturnArgVisitor

@@ -38,6 +38,7 @@ class Tokenizer (private val input: String) extends Iterator[Token]:
     if (currentChar == '/' && nextChar == '*') { skipMultilineComments(); return next }
 
     if (currentChar.isDigit) return getIntegerLiteral() // get integer literals
+    if (currentChar == '"') return getStringLiteral() // get string literals
 
     // get two- and one-character tokens
     var token: Token = twoCharacterTokens()
@@ -49,6 +50,16 @@ class Tokenizer (private val input: String) extends Iterator[Token]:
 
     println("The tokenizer failed to find any tokens!")
     null
+  }
+
+  /** Gets the string literal at the current position. */
+  private def getStringLiteral(): Token = {
+    advance() // skip first quote
+    val start = index
+    while (currentChar != '"' && advance()) {}
+    val content = input.substring(start, index)
+    advance() // skip last quote
+    new Token(TokenType.STRING_LITERAL, content)
   }
 
   /** Gets the integer literal at the current position. Only call if current position has a digit. */

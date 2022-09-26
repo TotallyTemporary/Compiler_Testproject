@@ -86,13 +86,17 @@ class Parser(private val tokens: Tokenizer) {
         advance()
         new IntegerLiteralNode(token.value.asInstanceOf[Integer])
 
+      case TokenType.STRING_LITERAL =>
+        val token = currentToken
+        advance()
+        new StringLiteralNode(token.value.asInstanceOf[String])
+
       case TokenType.IDENT =>
         val token = currentToken
         advance()
         new VarLiteral(token.value.asInstanceOf[String])
 
       case _ => throw new ParserException(s"Expected unary operator or parentheses or literal or identifier. Got: ${currentToken.tType}")
-      // TODO Add string literals
   }
 
   /** Move forward to the next token. Returns false if this token is actually a duplicate, last token. Returns true otherwise */
