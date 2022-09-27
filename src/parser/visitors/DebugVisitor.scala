@@ -5,11 +5,17 @@ import parser.visitors.ReturnArgVisitor
 
 // A visit needs to return nothing. The second parameter holds the indentation level for cleaner debugging.
 object DebugVisitor extends ReturnArgVisitor[Unit, Integer] {
-  def visit(n: Node, arg: Integer): Unit = n.accept(this, arg) // redirect unknown type
+  def visit(n: Node, arg: Integer): Unit =
+    println(n)
+    n.accept(this, arg) // redirect unknown type
 
   def visit(a: AssignNode, arg: Integer): Unit =
     debug("assign: ", arg)
     for (expr <- a.exprs) expr.accept(this, arg+1)
+
+  def visit(b: BlockNode, arg: Integer): Unit =
+    debug("block: ", arg)
+    for (stmt <- b.statements) stmt.accept(this, arg+1)
 
   def visit(d: DerefNode, arg: Integer): Unit =
     debug("deref: ", arg)
@@ -22,6 +28,11 @@ object DebugVisitor extends ReturnArgVisitor[Unit, Integer] {
   def visit(e: EqualsNode, arg: Integer): Unit =
     debug("equals: ", arg)
     for (expr <- e.exprs) expr.accept(this, arg+1)
+
+  def visit(i: IfNode, arg: Integer): Unit =
+    debug("if cond|body: ", arg)
+    i.condition.accept(this, arg+1)
+    i.statement.accept(this, arg+1)
 
   def visit(i: IntegerLiteralNode, arg: Integer): Unit =
     debug(s"integer literal: ${i.value}", arg)
@@ -42,11 +53,24 @@ object DebugVisitor extends ReturnArgVisitor[Unit, Integer] {
     debug("ref: ", arg)
     r.child.accept(this, arg+1)
 
+  def visit(r: ReturnNode, arg: Integer): Unit =
+    debug("return: ", arg)
+    r.child.accept(this, arg+1)
+
+  def visit(v: VarDeclNode, arg: Integer): Unit =
+    debug(s"vardecl ${v.varName}:", arg)
+    v.expression.accept(this, arg+1)
+
   def visit(v: VarLiteral, arg: Integer): Unit =
     debug(s"var literal: ${v.name}", arg)
 
   def visit(s: StringLiteralNode, arg: Integer): Unit =
     debug(s"string literal: ${s.value}", arg)
+
+  def visit(w: WhileNode, arg: Integer): Unit =
+    debug("while cond|body: ", arg)
+    w.condition.accept(this, arg+1)
+    w.statement.accept(this, arg+1)
 
   def debug(str: String, indent: Integer) = println(" "*indent+str)
 }

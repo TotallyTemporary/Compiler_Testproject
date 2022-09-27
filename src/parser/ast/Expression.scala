@@ -2,6 +2,6 @@ package parser.ast
 
 import parser.ast.Node
 
-trait Expression extends Node {
+trait Expression extends Statement {
 
 }

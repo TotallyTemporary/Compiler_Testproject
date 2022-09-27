@@ -3,17 +3,84 @@ package parser
 import parser.ast.*
 import tokenizer.{Token, TokenType, Tokenizer}
 
+import scala.collection.mutable.Buffer
+
 class Parser(private val tokens: Iterator[Token]) {
   private var currentToken = tokens.next
 
   /** Begins the parsing process. Returns the root node of the abstract syntax tree. */
-  def parse(): Expression = {
-    expr()
+  def parse(): Statement = {
+    val statements = Buffer[Statement]()
+    while (currentToken.tType != TokenType.END_OF_FILE) statements.append(statement())
+
+    new BlockNode(statements.toSeq:_*)
+  }
+
+  /* block_statement: LBRACKET statement* RBRACKET */
+  private def block_statement(): Statement = {
+    expect(TokenType.LBRACKET)
+    val statements = Buffer[Statement]()
+    while (currentToken.tType != TokenType.RBRACKET) statements.append(statement())
+
+    expect(TokenType.RBRACKET)
+    new BlockNode(statements.toSeq:_*) // don't ask me why this works. It unpacks the statements as arguments.
+  }
+
+  /* statement: block_statement | if_statement | while_statement
+    | return_statement | vardecl_statement | (expr SEMI) | SEMI */
+  private def statement(): Statement = {
+    currentToken.tType match
+      case TokenType.LBRACE => block_statement()
+      case TokenType.IF => if_statement()
+      case TokenType.WHILE => while_statement()
+      case TokenType.RETURN => return_statement()
+      case TokenType.VAR => vardecl_statement()
+      case TokenType.SEMI => new NopNode()
+      case _ => {
+        val expression = expr()
+        expect(TokenType.SEMI)
+        expression
+      }
+  }
+
+  /* if_statement: IF expr statement */
+  private def if_statement(): Statement = {
+    expect(TokenType.IF)
+    val condition = expr()
+    val body = statement()
+    new IfNode(condition, body)
+  }
+
+  /* while_statement: WHILE expr statement */
+  private def while_statement(): Statement = {
+    expect(TokenType.WHILE)
+    val condition = expr()
+    val body = statement()
+    new WhileNode(condition, body)
+  }
+
+  /* return_statement: RETURN expr SEMI */
+  private def return_statement(): Statement = {
+    expect(TokenType.RETURN)
+    val body = expr()
+    expect(TokenType.SEMI)
+    new ReturnNode(body)
+  }
+
+  /* vardecl_statement: VAR IDENT EQUALS expr SEMI */
+  private def vardecl_statement(): Statement = {
+    expect(TokenType.VAR)
+    val temp = currentToken; expect(TokenType.IDENT)
+    val name = temp.value.asInstanceOf[String]
+    expect(TokenType.EQUALS)
+    val expression = expr()
+    expect(TokenType.SEMI)
+
+    new VarDeclNode(name, expression)
   }
 
   /* expr: math_expr ([AND OR DOUBLE_EQUALS NOT_EQUALS EQUALS] math_expr)* | funccall_expr */
   // TODO Add funccall_expr
-
   private def expr(): Expression = {
     var left = math_expr()
 
