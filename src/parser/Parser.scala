@@ -3,7 +3,7 @@ package parser
 import parser.ast.*
 import tokenizer.{Token, TokenType, Tokenizer}
 
-class Parser(private val tokens: Tokenizer) {
+class Parser(private val tokens: Iterator[Token]) {
   private var currentToken = tokens.next
 
   /** Begins the parsing process. Returns the root node of the abstract syntax tree. */
