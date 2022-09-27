@@ -8,7 +8,7 @@ import parser.visitors.DebugVisitor
 import tokenizer.Tokenizer
 
 object Main extends App {
-  val tokens: Tokenizer = new Tokenizer("x&y&z") // next up add and-operations
+  val tokens: Tokenizer = new Tokenizer("x&y&z;") // next up add and-operations
   val rootNode: Node = new Parser(tokens).parse()
 
   DebugVisitor.visit(rootNode, 0)

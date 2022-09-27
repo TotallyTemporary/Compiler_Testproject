@@ -72,5 +72,13 @@ object DebugVisitor extends ReturnArgVisitor[Unit, Integer] {
     w.condition.accept(this, arg+1)
     w.statement.accept(this, arg+1)
 
+  def visit(a: AndNode, arg: Integer): Unit =
+    debug("and: ", arg)
+    for (expr <- a.exprs) expr.accept(this, arg+1)
+
+  def visit(o: OrNode, arg: Integer): Unit =
+    debug("or: ", arg)
+    for (expr <- o.exprs) expr.accept(this, arg+1)
+
   def debug(str: String, indent: Integer) = println(" "*indent+str)
 }

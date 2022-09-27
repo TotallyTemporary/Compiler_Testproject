@@ -191,6 +191,9 @@ class Parser(private val tokens: Iterator[Token]) {
       case TokenType.NOT_EQUALS => EqualsNode(IntegerLiteralNode(0), EqualsNode(left, right)) // x != y => (x == y) == 0
       case TokenType.EQUALS => AssignNode(left, right)
 
+      case TokenType.AND => AndNode(left, right)
+      case TokenType.OR => OrNode(left, right)
+
       case _ => throw new ParserException(s"$op is not a valid operation to do between two expressions.")
   }
 

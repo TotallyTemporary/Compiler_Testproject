@@ -23,5 +23,8 @@ trait ReturnArgVisitor[R, A]:
   def visit(v: VarDeclNode, arg: A): R
   def visit(s: StringLiteralNode, arg: A): R
   def visit(w: WhileNode, arg: A): R
+  def visit(a: AndNode, arg: A): R
+  def visit(o: OrNode, arg: A): R
+
 
 end ReturnArgVisitor
