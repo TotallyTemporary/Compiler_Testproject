@@ -1,6 +1,6 @@
-package parser.visitors
+package ast.visitors
 
-import parser.ast.*
+import ast.*
 
 /** This type of visitor has a return type and an argument type. */
 trait ReturnArgVisitor[R, A]:

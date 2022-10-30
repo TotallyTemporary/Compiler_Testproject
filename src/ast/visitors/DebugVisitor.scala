@@ -1,7 +1,7 @@
-package parser.visitors
+package ast.visitors
 
-import parser.ast.*
-import parser.visitors.ReturnArgVisitor
+import ast.*
+import ast.visitors.ReturnArgVisitor
 
 // A visit needs to return nothing. The second parameter holds the indentation level for cleaner debugging.
 object DebugVisitor extends ReturnArgVisitor[Unit, Integer] {
@@ -80,14 +80,14 @@ object DebugVisitor extends ReturnArgVisitor[Unit, Integer] {
     debug("or: ", arg)
     for (expr <- o.exprs) expr.accept(this, arg+1)
 
-  def visit(p: parser.ast.ParamNode, arg: Integer): Unit =
+  def visit(p: ast.ParamNode, arg: Integer): Unit =
     debug(s"param: ${p.name}", arg)
 
-  def visit(p: parser.ast.ProgramNode, arg: Integer): Unit =
+  def visit(p: ast.ProgramNode, arg: Integer): Unit =
     debug(s"program start:", arg)
     for (funcDecl <- p.functions) funcDecl.accept(this, arg+1)
 
-  def visit(f: parser.ast.FuncDeclNode, arg: Integer): Unit =
+  def visit(f: ast.FuncDeclNode, arg: Integer): Unit =
     debug(s"func decl ${f.name} params|body:", arg)
     for (param <- f.params) param.accept(this, arg+1)
     f.body.accept(this, arg+1)

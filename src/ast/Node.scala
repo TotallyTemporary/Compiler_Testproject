@@ -1,6 +1,6 @@
-package parser.ast
+package ast
 
-import parser.visitors.ReturnArgVisitor
+import ast.visitors.ReturnArgVisitor
 
 trait Node {
   def accept[R, A](visitor: ReturnArgVisitor[R, A], arg: A): R

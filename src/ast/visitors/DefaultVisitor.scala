@@ -1,6 +1,6 @@
-package parser.visitors
+package ast.visitors
 
-import parser.ast.*
+import ast.*
 
 class DefaultVisitor[R, A] extends ReturnArgVisitor[R, A] {
   /* This visitor is a continuation of the ReturnArgVisitor, but it predefines all of the visit functions so they don't all have to be redefined. */
@@ -69,13 +69,13 @@ class DefaultVisitor[R, A] extends ReturnArgVisitor[R, A] {
     exprs.last.accept(this, arg)
   }
 
-  def visit(p: parser.ast.ParamNode, arg: A): R =
+  def visit(p: ast.ParamNode, arg: A): R =
     null.asInstanceOf[R]
 
-  def visit(p: parser.ast.ProgramNode, arg: A): R =
+  def visit(p: ast.ProgramNode, arg: A): R =
     visitAllAndReturnLast(p.functions, arg)
 
-  def visit(f: parser.ast.FuncDeclNode, arg: A): R =
+  def visit(f: ast.FuncDeclNode, arg: A): R =
     for (param <- f.params) param.accept(this, arg)
     f.body.accept(this, arg)
 

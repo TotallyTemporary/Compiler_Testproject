@@ -1,4 +1,4 @@
-package parser.ast
+package ast
 
 trait Statement extends Node {
 

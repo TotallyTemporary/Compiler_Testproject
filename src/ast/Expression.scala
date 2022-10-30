@@ -1,6 +1,6 @@
-package parser.ast
+package ast
 
-import parser.ast.Node
+import ast.Node
 
 trait Expression extends Statement {
 
