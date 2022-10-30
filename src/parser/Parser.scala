@@ -1,6 +1,6 @@
 package parser
 
-import parser.ast.*
+import ast.*
 import tokenizer.{Token, TokenType, Tokenizer}
 
 import scala.collection.mutable
@@ -9,20 +9,21 @@ class Parser(private val tokens: Iterator[Token]) {
   private var currentToken = tokens.next
 
   /** Begins the parsing process. Returns the root node of the abstract syntax tree. */
-  def parse(): Statement = {
+  def parse(): ProgramNode = {
     program()
   }
 
   /* program: { function_declaration } EOF */
-  private def program(): Statement = {
-    val functions = mutable.Buffer[Statement]()
+  private def program(): ProgramNode = {
+    val functions = mutable.Buffer[FuncDeclNode]()
     while (currentToken.tType != TokenType.END_OF_FILE) functions.append(function_declaration())
+    expect(TokenType.END_OF_FILE)
 
     new ProgramNode(functions.toSeq:_*)
   }
 
   /* function_declaration: IDENT LPAREN IDENT* RPAREN statement */
-  private def function_declaration(): Statement = {
+  private def function_declaration(): FuncDeclNode = {
     // function name
     val temp = currentToken.value; expect(TokenType.IDENT)
     val funcName = temp.asInstanceOf[String]
@@ -217,12 +218,24 @@ class Parser(private val tokens: Iterator[Token]) {
 
       case TokenType.DOUBLE_EQUALS => EqualsNode(left, right)
       case TokenType.NOT_EQUALS => EqualsNode(IntegerLiteralNode(0), EqualsNode(left, right)) // x != y => (x == y) == 0
-      case TokenType.EQUALS => AssignNode(left, right)
+      case TokenType.EQUALS =>
+        if !isLeftValue(left) then throw new ParserException(s"$left is not a value that can be assigned to.")
+        else AssignNode(left, right)
 
       case TokenType.AND => AndNode(left, right)
       case TokenType.OR => OrNode(left, right)
 
       case _ => throw new ParserException(s"$op is not a valid operation to do between two expressions.")
+  }
+
+  /** Only some expressions can be used in the left hand side of an assign operation
+   * &x = 5; #allowed
+   * 6 = 5; # not allowed */
+  private def isLeftValue(expr: Expression): Boolean = {
+    expr match
+      case e: VarLiteral => true
+      case e: DerefNode => true
+      case _ => false
   }
 
   /*
