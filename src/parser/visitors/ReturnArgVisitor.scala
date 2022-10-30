@@ -26,5 +26,8 @@ trait ReturnArgVisitor[R, A]:
   def visit(a: AndNode, arg: A): R
   def visit(o: OrNode, arg: A): R
 
+  def visit(p: ParamNode, arg: A): R
+  def visit(p: ProgramNode, arg: A): R
+  def visit(f: FuncDeclNode, arg: A): R
 
 end ReturnArgVisitor

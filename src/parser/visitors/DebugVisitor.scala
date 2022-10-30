@@ -80,5 +80,17 @@ object DebugVisitor extends ReturnArgVisitor[Unit, Integer] {
     debug("or: ", arg)
     for (expr <- o.exprs) expr.accept(this, arg+1)
 
+  def visit(p: parser.ast.ParamNode, arg: Integer): Unit =
+    debug(s"param: ${p.name}", arg)
+
+  def visit(p: parser.ast.ProgramNode, arg: Integer): Unit =
+    debug(s"program start:", arg)
+    for (funcDecl <- p.functions) funcDecl.accept(this, arg+1)
+
+  def visit(f: parser.ast.FuncDeclNode, arg: Integer): Unit =
+    debug(s"func decl ${f.name} params|body:", arg)
+    for (param <- f.params) param.accept(this, arg+1)
+    f.body.accept(this, arg+1)
+
   def debug(str: String, indent: Integer) = println(" "*indent+str)
 }

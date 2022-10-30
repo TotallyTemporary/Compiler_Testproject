@@ -3,26 +3,54 @@ package parser
 import parser.ast.*
 import tokenizer.{Token, TokenType, Tokenizer}
 
-import scala.collection.mutable.Buffer
+import scala.collection.mutable
 
 class Parser(private val tokens: Iterator[Token]) {
   private var currentToken = tokens.next
 
   /** Begins the parsing process. Returns the root node of the abstract syntax tree. */
   def parse(): Statement = {
-    val statements = Buffer[Statement]()
-    while (currentToken.tType != TokenType.END_OF_FILE) statements.append(statement())
-
-    new BlockNode(statements.toSeq:_*)
+    program()
   }
 
-  /* block_statement: LBRACKET statement* RBRACKET */
-  private def block_statement(): Statement = {
-    expect(TokenType.LBRACKET)
-    val statements = Buffer[Statement]()
-    while (currentToken.tType != TokenType.RBRACKET) statements.append(statement())
+  /* program: { function_declaration } EOF */
+  private def program(): Statement = {
+    val functions = mutable.Buffer[Statement]()
+    while (currentToken.tType != TokenType.END_OF_FILE) functions.append(function_declaration())
 
-    expect(TokenType.RBRACKET)
+    new ProgramNode(functions.toSeq:_*)
+  }
+
+  /* function_declaration: IDENT LPAREN IDENT* RPAREN statement */
+  private def function_declaration(): Statement = {
+    // function name
+    val temp = currentToken.value; expect(TokenType.IDENT)
+    val funcName = temp.asInstanceOf[String]
+
+    // function params
+    val params = mutable.Buffer[ParamNode]()
+    expect(TokenType.LPAREN)
+    while (currentToken.tType != TokenType.RPAREN) {
+      val temp = currentToken.value; expect(TokenType.IDENT)
+      val paramName = temp.asInstanceOf[String]
+      params.append(new ParamNode(paramName))
+    }
+    expect(TokenType.RPAREN)
+
+    // function body
+    val body = statement()
+
+    // put it all together
+    new FuncDeclNode(funcName, body, params.toSeq:_*)
+  }
+
+  /* block_statement: LBRACE statement* RBRACE */
+  private def block_statement(): Statement = {
+    expect(TokenType.LBRACE)
+    val statements = mutable.Buffer[Statement]()
+    while (currentToken.tType != TokenType.RBRACE) statements.append(statement())
+
+    expect(TokenType.RBRACE)
     new BlockNode(statements.toSeq:_*) // don't ask me why this works. It unpacks the statements as arguments.
   }
 
