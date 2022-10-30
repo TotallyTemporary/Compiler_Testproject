@@ -9,11 +9,9 @@ import tokenizer.Tokenizer
 
 object Main extends App {
   val tokens: Tokenizer = new Tokenizer("""
-     sum (a b) {
-      2 = 4;
-      if (a == 1) b = 1;
+    sum (a b) {
       return a+b;
-     }
+    }
   """)
   val rootNode: ProgramNode = new Parser(tokens).parse()
 

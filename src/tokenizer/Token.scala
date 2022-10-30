@@ -11,6 +11,6 @@ enum TokenType:
   case END_OF_FILE // this token represents the file having ended.
 end TokenType
 
-class Token(val tType: TokenType, val value: Object):
-  override def toString = s"$tType: $value"
+class Token(val tType: TokenType, val location: Location, val value: Object):
+  override def toString = s"$tType: $value at $location"
 end Token

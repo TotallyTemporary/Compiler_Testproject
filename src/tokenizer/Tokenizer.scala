@@ -7,6 +7,11 @@ import scala.collection.mutable
 
 class Tokenizer (private val input: String) extends Iterator[Token]:
   private var index = 0
+  private var row = 0; private var column = 0
+
+  private def currentLocation = {
+    new Location(row, column)
+  }
 
   private def currentChar = {
     if (index >= input.length) input.charAt(input.length-1) // if we've stepped beyond the input we get the last character.
@@ -31,7 +36,7 @@ class Tokenizer (private val input: String) extends Iterator[Token]:
   /** Gets the next token parsed from the input string. */
   def next: Token = {
     // these methods must recursively call next so we don't run them in the wrong order.
-    if (index >= input.length) return Token(TokenType.END_OF_FILE, null)
+    if (index >= input.length) return Token(TokenType.END_OF_FILE, currentLocation, null)
 
     if (currentChar.isWhitespace)              { skipWhitespace(); return next }
     if (currentChar == '/' && nextChar == '/') { skipComment(); return next }
@@ -48,8 +53,7 @@ class Tokenizer (private val input: String) extends Iterator[Token]:
 
     if (currentChar.isLetter) return identifiers() // get identifiers
 
-    println("The tokenizer failed to find any tokens!")
-    null
+    throw new TokenizerException(s"Unexpected char '$currentChar'", currentLocation)
   }
 
   /** Gets the string literal at the current position. */
@@ -59,7 +63,7 @@ class Tokenizer (private val input: String) extends Iterator[Token]:
     while (currentChar != '"' && advance()) {}
     val content = input.substring(start, index)
     advance() // skip last quote
-    new Token(TokenType.STRING_LITERAL, content)
+    new Token(TokenType.STRING_LITERAL, currentLocation, content)
   }
 
   /** Gets the integer literal at the current position. Only call if current position has a digit. */
@@ -68,7 +72,7 @@ class Tokenizer (private val input: String) extends Iterator[Token]:
     while (currentChar.isDigit && advance()) {}
 
     val intVal: Integer = Integer.parseInt(input.substring(start, index))
-    new Token(TokenType.INTEGER_LITERAL, intVal)
+    new Token(TokenType.INTEGER_LITERAL, currentLocation, intVal)
   }
 
   /** Skips whitespace. Only call if there is whitespace. */
@@ -113,10 +117,10 @@ class Tokenizer (private val input: String) extends Iterator[Token]:
     val tType = keywords.get(name.toLowerCase)
     if (tType.isEmpty) {
       // identifier
-      new Token(TokenType.IDENT, name)
+      new Token(TokenType.IDENT, currentLocation, name)
     } else {
       // keyword
-      new Token(tType.get, name.toLowerCase)
+      new Token(tType.get, currentLocation, name.toLowerCase)
     }
   }
 
@@ -131,7 +135,7 @@ class Tokenizer (private val input: String) extends Iterator[Token]:
 
     advance()
     advance()
-    new Token(tType.get, strCurr)
+    new Token(tType.get, currentLocation, strCurr)
   }
 
   /** This function returns a token if one was found at the current index. Returns null otherwise.
@@ -150,13 +154,20 @@ class Tokenizer (private val input: String) extends Iterator[Token]:
     val now: Character = currentChar
     if (tokens.contains(currentChar)) {
       advance()
-      return new Token(tokens(now), now)
+      return new Token(tokens(now), currentLocation, now)
     }
     null
   }
 
   private def advance() = {
+    row += 1
     index += 1
+
+    if (currentChar == '\n') {
+      row = 0
+      column += 1
+    }
+
     if (index >= input.length) false
     else true
   }

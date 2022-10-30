@@ -1,7 +1,7 @@
 package parser
 
 import ast.*
-import tokenizer.{Token, TokenType, Tokenizer}
+import tokenizer.{Location, Token, TokenType, Tokenizer}
 
 import scala.collection.mutable
 
@@ -19,6 +19,7 @@ class Parser(private val tokens: Iterator[Token]) {
     while (currentToken.tType != TokenType.END_OF_FILE) functions.append(function_declaration())
     expect(TokenType.END_OF_FILE)
 
+    if (functions.isEmpty) throw new ParserException("File must contain at least one function. Top level code is not supported.", new Location(0, 0))
     new ProgramNode(functions.toSeq:_*)
   }
 
@@ -116,9 +117,9 @@ class Parser(private val tokens: Iterator[Token]) {
     while (currentToken.tType == TokenType.AND || currentToken.tType == TokenType.OR
       || currentToken.tType == TokenType.DOUBLE_EQUALS || currentToken.tType == TokenType.NOT_EQUALS
       || currentToken.tType == TokenType.EQUALS) {
-      val tokenType = currentToken.tType
+      val op = currentToken
       advance()
-      left = binop(tokenType, left, math_expr())
+      left = binop(op, left, math_expr())
 
     }
 
@@ -130,9 +131,9 @@ class Parser(private val tokens: Iterator[Token]) {
     var left = term()
 
     while (currentToken.tType == TokenType.PLUS || currentToken.tType == TokenType.MINUS) {
-      val tokenType = currentToken.tType
+      val op = currentToken
       advance()
-      left = binop(tokenType, left, term())
+      left = binop(op, left, term())
     }
 
     left
@@ -144,9 +145,9 @@ class Parser(private val tokens: Iterator[Token]) {
     var left = factor()
 
     while (currentToken.tType == TokenType.MUL || currentToken.tType == TokenType.DIV) {
-      val tokenType = currentToken.tType
+      val op = currentToken
       advance()
-      left = binop(tokenType, left, factor())
+      left = binop(op, left, factor())
     }
 
     left
@@ -192,7 +193,8 @@ class Parser(private val tokens: Iterator[Token]) {
         advance()
         new VarLiteral(token.value.asInstanceOf[String])
 
-      case _ => throw new ParserException(s"Expected unary operator or parentheses or literal or identifier. Got: ${currentToken.tType}")
+      case _ => throw new ParserException(s"Expected unaryop,(,literal,identifier, but got ${currentToken.tType}",
+        currentToken.location)
   }
 
   /** Move forward to the next token. Returns false if this token is actually a duplicate, last token. Returns true otherwise */
@@ -205,11 +207,12 @@ class Parser(private val tokens: Iterator[Token]) {
   /** Move forward only if the current token is one of the expected types. Otherwise throw an error. */
   private def expect(types: TokenType*): Unit = {
     if (types.contains(currentToken.tType)) advance()
-    else throw new ParserException(s"Expected types ${types}, got type ${currentToken.tType}")
+    else throw new ParserException(s"Expected types ${types.mkString(",")}, got type ${currentToken.tType}", currentToken.location)
   }
 
   /** Streamlines making binops a bit. PlusNode(term(), term()) = binop(PLUS, term(), term()) */
-  private def binop(op: TokenType, left: Expression, right: Expression): Expression = {
+  private def binop(opToken: Token, left: Expression, right: Expression): Expression = {
+    val op = opToken.tType
     op match
       case TokenType.PLUS => PlusNode(left, right)
       case TokenType.MINUS => PlusNode(left, InverseNode(right))
@@ -219,13 +222,13 @@ class Parser(private val tokens: Iterator[Token]) {
       case TokenType.DOUBLE_EQUALS => EqualsNode(left, right)
       case TokenType.NOT_EQUALS => EqualsNode(IntegerLiteralNode(0), EqualsNode(left, right)) // x != y => (x == y) == 0
       case TokenType.EQUALS =>
-        if !isLeftValue(left) then throw new ParserException(s"$left is not a value that can be assigned to.")
+        if !isLeftValue(left) then throw new ParserException(s"$left is not a value that can be assigned to", opToken.location)
         else AssignNode(left, right)
 
       case TokenType.AND => AndNode(left, right)
       case TokenType.OR => OrNode(left, right)
 
-      case _ => throw new ParserException(s"$op is not a valid operation to do between two expressions.")
+      case _ => throw new ParserException(s"$op is not a valid operation to do between two expressions", opToken.location)
   }
 
   /** Only some expressions can be used in the left hand side of an assign operation
