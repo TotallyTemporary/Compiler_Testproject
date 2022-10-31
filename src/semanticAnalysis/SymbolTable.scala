@@ -5,12 +5,16 @@ import ast.Node
 import scala.collection.mutable
 
 object SymbolTable {
-  val table = mutable.Map[(Node, Node), SymbolTable]()
+  val startTable = mutable.Map[Node, SymbolTable]()
+  val endTable = mutable.Map[Node, SymbolTable]()
 
+  def getStart(node: Node): SymbolTable = startTable(node)
+  def getEnd(node: Node): SymbolTable = endTable(node)
 }
 
 class SymbolTable(val parent: Option[SymbolTable], val startNode: Node, val endNode: Node) {
-  SymbolTable.table.put((startNode, endNode), this)
+  SymbolTable.startTable.put(startNode, this)
+  SymbolTable.endTable.put(endNode, this)
   val symbolMap = mutable.Map[String, Symbol]()
 
   def define(name: String, symbol: Symbol) = {

@@ -21,7 +21,8 @@ object SymbolicAnalyzer extends DefaultVisitor[Unit, SymbolTable] with ReturnArg
   }
 
   override def visit(b: BlockNode, arg: SymbolTable): Unit =
-    super.visit(b, new SymbolTable(Some(arg), b.statements.head, b.statements.last)) // make a new scope to visit block contents
+    val newTable = new SymbolTable(Some(arg), b.statements.head, b.statements.last)
+    super.visit(b, newTable)
 
   /* on var declaration make sure entry does not yet exist, then add one. */
   override def visit(v: VarDeclNode, arg: SymbolTable): Unit =
