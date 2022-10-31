@@ -24,12 +24,18 @@ class Parser(private val tokens: Iterator[Token]) {
   }
 
   /* function_declaration: IDENT LPAREN IDENT* RPAREN statement */
+  /*
+  *
+  * sum(a b) {
+  *   // something
+  * }
+  * */
   private def function_declaration(): FuncDeclNode = {
-    // function name
+    // function name (sum)
     val temp = currentToken.value; expect(TokenType.IDENT)
     val funcName = temp.asInstanceOf[String]
 
-    // function params
+    // function params (a, b)
     val params = mutable.Buffer[ParamNode]()
     expect(TokenType.LPAREN)
     while (currentToken.tType != TokenType.RPAREN) {
@@ -39,11 +45,15 @@ class Parser(private val tokens: Iterator[Token]) {
     }
     expect(TokenType.RPAREN)
 
-    // function body
-    val body = statement()
+    // function body (something)
+    // function body must have a scope so if it's not already inside braces, we add "imaginary" braces
+    val statementBody = statement()
+    val blockBody = statementBody match
+      case b: BlockNode => b
+      case b => new BlockNode(statementBody)
 
     // put it all together
-    new FuncDeclNode(funcName, body, params.toSeq:_*)
+    new FuncDeclNode(funcName, blockBody, params.toSeq:_*)
   }
 
   /* block_statement: LBRACE statement* RBRACE */

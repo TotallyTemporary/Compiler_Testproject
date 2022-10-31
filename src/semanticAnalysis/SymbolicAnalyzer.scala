@@ -7,22 +7,21 @@ import scala.collection.mutable
 
 object SymbolicAnalyzer extends DefaultVisitor[Unit, SymbolTable] with ReturnArgVisitor[Unit, SymbolTable] {
 
-  /* This might violate the visitor pattern but i couldn't get the return type any other way. */
-  def getFunctionSymbolTables(p: ProgramNode): mutable.Map[String, SymbolTable] = {
-    // maps function name to its symbol table.
-    var allSymbolTables = mutable.Map[String, SymbolTable]()
-
+  override def visit(p: ProgramNode, _unused: SymbolTable): Unit = {
     for (func <- p.functions) {
-      // make new table, populate table with params and func temp variables, then store it.
-      val newTable = new SymbolTable(None)
-      for (param <- func.params) do newTable.define(param.name, new Symbol(param.name))
+      // make new scope and add the func parameters to it
+      val newTable = new SymbolTable(None, func.body, func.body)
+      for (param <- func.params) do newTable.define(param.name, new Symbol(param.name, SymbolType.Param))
 
+      // populate the scope with local variables
       func.accept(this, newTable)
-      allSymbolTables.put(func.name, newTable)
-    }
 
-    allSymbolTables
+      // the symbol table is ready
+    }
   }
+
+  override def visit(b: BlockNode, arg: SymbolTable): Unit =
+    super.visit(b, new SymbolTable(Some(arg), b.statements.head, b.statements.last)) // make a new scope to visit block contents
 
   /* on var declaration make sure entry does not yet exist, then add one. */
   override def visit(v: VarDeclNode, arg: SymbolTable): Unit =
@@ -30,7 +29,7 @@ object SymbolicAnalyzer extends DefaultVisitor[Unit, SymbolTable] with ReturnArg
     arg.inThisScope(v.varName) match
       case Some(symbol) => throw new SemanticException(s"Double definition of variable ${v.varName}")
       case None => {} // cool, this variable doesn't yet exist!
-    arg.define(v.varName, new Symbol(v.varName))
+    arg.define(v.varName, new Symbol(v.varName, SymbolType.Variable))
 
   /* on var literal read make sure entry exists */
   override def visit(v: VarLiteral, arg: SymbolTable): Unit =

@@ -1,17 +1,23 @@
 package semanticAnalysis
 
+import ast.Node
+
 import scala.collection.mutable
 
-/* this class can later on store many more things, such as variable type and its category */
-class Symbol(name: String) {}
+object SymbolTable {
+  val table = mutable.Map[(Node, Node), SymbolTable]()
 
-class SymbolTable(val parent: Option[SymbolTable]) {
+}
+
+class SymbolTable(val parent: Option[SymbolTable], val startNode: Node, val endNode: Node) {
+  SymbolTable.table.put((startNode, endNode), this)
   val symbolMap = mutable.Map[String, Symbol]()
 
   def define(name: String, symbol: Symbol) = {
     symbolMap.put(name, symbol)
   }
 
+  /** Returns Some(symbol) if that symbol exists in the nearest scope. */
   def inThisScope(name: String): Option[Symbol] = {
     symbolMap.get(name)
   }
@@ -26,4 +32,6 @@ class SymbolTable(val parent: Option[SymbolTable]) {
     }
   }
 
+  override def toString: String =
+    symbolMap.mkString("\n  ", "\n  ", "\n")
 }
