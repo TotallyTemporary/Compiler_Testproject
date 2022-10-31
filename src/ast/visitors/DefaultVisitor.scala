@@ -64,11 +64,6 @@ class DefaultVisitor[R, A] extends ReturnArgVisitor[R, A] {
   def visit(o: OrNode, arg: A): R =
     visitAllAndReturnLast(o.exprs, arg)
 
-  def visitAllAndReturnLast(exprs: Seq[Statement], arg: A): R = {
-    for (expr <- exprs.takeRight(1)) expr.accept(this, arg)
-    exprs.last.accept(this, arg)
-  }
-
   def visit(p: ast.ParamNode, arg: A): R =
     null.asInstanceOf[R]
 
@@ -79,6 +74,9 @@ class DefaultVisitor[R, A] extends ReturnArgVisitor[R, A] {
     for (param <- f.params) param.accept(this, arg)
     f.body.accept(this, arg)
 
-
+  def visitAllAndReturnLast(exprs: Seq[Statement], arg: A): R = {
+    for (expr <- exprs.init) expr.accept(this, arg)
+    exprs.last.accept(this, arg)
+  }
 
 }
